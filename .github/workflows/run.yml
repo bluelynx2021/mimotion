@@ -9,11 +9,13 @@ jobs:
   build:
     runs-on: ubuntu-latest
     timeout-minutes: 60
+    
     steps:
       - name: Checkout codes
         uses: actions/checkout@v5
         with:
-          token: ${{ secrets.PAT }} #此处PAT需要申请，教程详见：README
+          token: ${{ secrets.PAT }}
+          
       - name: Update system and install zsh
         run: |
           sudo -E apt-get -qq update
@@ -31,11 +33,14 @@ jobs:
         run: |
           pip3 install requests pytz pycryptodome
           python3 main.py
-
+          
       - name: persist tokens
+        # 关键：在 push 时也使用相同的 PAT
         run: |
-          git config user.name github-actions
-          git config user.email github-actions@users.noreply.github.com
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          # 设置远程 URL 使用 PAT
+          git remote set-url origin https://x-access-token:${{ secrets.PAT }}@github.com/bluelynx2021/mimotion.git
           git add .
-          git commit -m "persist tokens trigger by ${{ github.event_name }}"
+          git commit -m "persist tokens trigger by ${{ github.event_name }}" || echo "No changes to commit"
           git push origin master
